@@ -6,7 +6,6 @@ import { BudgetManager } from './components/BudgetManager';
 import { ProjectionTable } from './components/ProjectionTable';
 import { AIAdvisor } from './components/AIAdvisor';
 import { FinancialState, View, Debt, Income, Expense, NotificationItem, UserProfile } from './types';
-import { Bell, User } from 'lucide-react';
 
 // Simple ID generator since we can't add external packages easily
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -119,8 +118,6 @@ const App: React.FC = () => {
                title: '¡Vencimiento Hoy!',
                message: `El pago mínimo de ${debt.name} vence hoy. Evita recargos.`
              });
-             // Trigger push only if not already notified logic implies sophisticated state, 
-             // but here we just ensure it exists in the list.
           } else if (dueDay > currentDay && dueDay <= currentDay + 3) {
              const daysLeft = dueDay - currentDay;
              notes.push({
@@ -177,7 +174,6 @@ const App: React.FC = () => {
     };
 
     calculateNotifications();
-    // Re-check every minute to ensure date changes are caught
     const interval = setInterval(calculateNotifications, 60000); 
     return () => clearInterval(interval);
 
@@ -217,11 +213,10 @@ const App: React.FC = () => {
       
       const newTotalDebt = updatedDebts.reduce((acc, d) => acc + d.currentAmount, 0);
       
-      // Update history if it's a new month or just append for demo
       const newHistory = [...prev.history];
       const lastHist = newHistory[newHistory.length - 1];
       if (lastHist && lastHist.date === date.substring(0, 7)) {
-          lastHist.totalDebt = newTotalDebt; // Update current month
+          lastHist.totalDebt = newTotalDebt; 
       } else {
           newHistory.push({ date: date, totalDebt: newTotalDebt });
       }
@@ -234,7 +229,6 @@ const App: React.FC = () => {
       };
     });
 
-    // Send visual feedback and system notification
     sendSystemNotification('Pago Registrado', `${currentUser} pagó $${amount} a ${debtName}`);
   };
 
@@ -289,44 +283,27 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20 md:pb-0">
-      <div className="bg-slate-900 text-white pb-12 pt-8 px-4 md:px-8 shadow-md">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Finanzas Edna & Ronaldo</h1>
-            <p className="text-slate-400 text-sm flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${pushEnabled ? 'bg-green-500' : 'bg-red-500'}`} />
-              {pushEnabled ? 'Sincronización activa' : 'Notificaciones desactivadas'}
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-             <div className="bg-slate-800 rounded-full px-4 py-2 flex items-center space-x-2 border border-slate-700">
-                <User className="w-4 h-4 text-brand-400" />
-                <span className="text-sm text-slate-300 mr-2">Soy:</span>
-                <select 
-                  value={currentUser}
-                  onChange={(e) => setCurrentUser(e.target.value as UserProfile)}
-                  className="bg-transparent text-white font-bold outline-none cursor-pointer"
-                >
-                  <option value="Edna" className="text-slate-900">Edna</option>
-                  <option value="Ronaldo" className="text-slate-900">Ronaldo</option>
-                </select>
-             </div>
-             
-             <div className="hidden md:block text-right">
-                <p className="text-xs text-slate-500">{new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-             </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+      <Navbar 
+        currentView={currentView} 
+        onChangeView={setCurrentView} 
+        currentUser={currentUser}
+        onUserChange={setCurrentUser}
+        pushEnabled={pushEnabled}
+      />
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-8">
-        <Navbar currentView={currentView} onChangeView={setCurrentView} />
-        <main className="mt-6 md:mt-0">
+      <div className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="animate-fadeIn">
           {renderView()}
         </main>
       </div>
+      
+      <footer className="bg-white border-t border-slate-200 mt-auto">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs text-slate-400">
+           <p>© 2024 Finanzas Edna & Ronaldo. Todos los derechos reservados.</p>
+           <p>Versión Web 2.0</p>
+        </div>
+      </footer>
     </div>
   );
 };
